@@ -1,0 +1,69 @@
+---
+title: "Assignment_7"
+author: "Rahul Bagga"
+date: "10/19/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Markowitz Mean-Variance Portfolio 
+#Efficient Frontier 
+## Loading packages
+```{r}
+library(quadprog)
+library(ggplot2)
+```
+ 
+Loading the returns for each stock A,B,C with 5%, 4% and 6% returns respectively
+```{r}
+mu_return_vector <- c(0.05, 0.04, 0.06) 
+```
+Load the sigma or covariance matrix
+```{r}
+sigma <- matrix(c(0.01, 0.002, 0.005, 
+                  0.002, 0.008, 0.006, 
+                  0.005, 0.006, 0.012), 
+                nrow=3, ncol=3)
+```
+Loading all the constrains for the quadratic equation for Markowitz Mean-Variance Portfolio 
+```{r}
+D.Matrix <- 2*sigma
+d.Vector <- rep(0, 3)
+A.Equality <- matrix(c(1,1,1), ncol=1)
+A.Matrix <- cbind(A.Equality, mu_return_vector, 
+                  diag(3))
+
+```
+As it is given that minimum value of the return is 3.5% and the maximum value is 6%.
+```{r}
+return_val <- seq(0.035, 0.06, 0.001)
+risk_val <- rep(0, length(return_val))
+``` 
+
+Setting the return values on b-Vector and solving the Quadratic Equation 
+```{r}
+for (t in 1:length(return_val)) {
+  b.Vector <- c(1, return_val[t], rep(0, 3))
+  out <- solve.QP(Dmat=D.Matrix, dvec=d.Vector, 
+                  Amat=A.Matrix, bvec=b.Vector, 
+                  meq=1)
+  risk_val[t] <- out$value
+}
+```
+
+Creating a dataframe for risk values to plot using ggplot
+```{r}
+df <- data.frame(return_val, risk_val)
+```
+
+Plotting the efficient frontier graph to show the Returns with respect to Risk Tolerance
+
+```{r}
+g <- ggplot(df, aes(risk_val, return_val)) + geom_line()
+g+ggtitle("Efficient Frontier")+xlab("Risk Appetite")+ylab("Expected Return")
+```
+
+
